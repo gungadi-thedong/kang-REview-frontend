@@ -6,27 +6,61 @@ import { useRouter } from "next/navigation";
 export default function RegisterPage() {
   const router = useRouter();
 
-  const [gmail, setGmail] = useState("");
+  const [namaUser, setNamaUser] = useState("");
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
     if (password !== confirmPassword) {
-      alert("Password dan konfirmasi password tidak sama!");
+      setError("Password dan konfirmasi password tidak sama");
       return;
     }
-    console.log("Gmail:", gmail);
-    console.log("Username:", username);
-    console.log("Password:", password);
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          nama_user: namaUser,
+          email,
+          username,
+          password,
+        }),
+      });
+
+      const text = await res.text();
+      console.log("RAW RESPONSE:", text);
+
+      const data = JSON.parse(text);
+
+      if (!res.ok) {
+        throw new Error(data.message || "Register gagal");
+      }
+
+      alert("Registrasi berhasil, silakan login");
+      router.push("/login");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen bg-[#0b1623] text-white flex flex-col items-center">
-      {/* 🔹 Navbar */}
+      {/* Navbar */}
       <nav className="w-full flex justify-between items-center px-10 py-6">
         <h1 className="text-2xl font-bold">Kang Review</h1>
         <a href="/" className="text-lg hover:underline">
@@ -34,97 +68,81 @@ export default function RegisterPage() {
         </a>
       </nav>
 
-      {/* 🔹 Form Register */}
+      {/* Form */}
       <div className="flex flex-col justify-center items-center flex-grow">
-        <h2 className="text-3xl font-[Cinzel] mb-8">Register</h2>
+        <h2 className="text-3xl mb-8">Register</h2>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-[#363636] border-2 border-white p-8 rounded-2xl shadow-xl w-80 flex flex-col items-center gap-4"
+          className="bg-[#363636] border border-white p-8 rounded-2xl shadow-xl w-80 flex flex-col gap-4"
         >
-          {/* Gmail */}
-          <div className="w-full">
-            <label className="block text-sm mb-1">Gmail</label>
-            <input
-              type="email"
-              value={gmail}
-              onChange={(e) => setGmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-full bg-[#2c2c2c] text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
+          {/* Nama */}
+          <input
+            placeholder="Nama"
+            value={namaUser}
+            onChange={(e) => setNamaUser(e.target.value)}
+            required
+            className="input"
+          />
+
+          {/* Email */}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="input"
+          />
 
           {/* Username */}
-          <div className="w-full">
-            <label className="block text-sm mb-1">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 rounded-full bg-[#2c2c2c] text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-          </div>
+          <input
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="input"
+          />
 
           {/* Password */}
-          <div className="w-full relative">
-            <label className="block text-sm mb-1">Password</label>
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 pr-10 rounded-full bg-[#2c2c2c] text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-7 text-gray-400 hover:text-white"
-            >
-              {showPassword ? "🙈" : "👁"}
-            </button>
-          </div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="input"
+          />
 
-          {/* Confirm Password */}
-          <div className="w-full relative">
-            <label className="block text-sm mb-1">Confirm Password</label>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3 py-2 pr-10 rounded-full bg-[#2c2c2c] text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
-            <button
-              type="button"
-              onClick={() =>
-                setShowConfirmPassword(!showConfirmPassword)
-              }
-              className="absolute right-3 top-7 text-gray-400 hover:text-white"
-            >
-              {showConfirmPassword ? "🙈" : "👁"}
-            </button>
-          </div>
+          {/* Confirm */}
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            className="input"
+          />
 
-          {/* Tombol */}
-          <div className="flex flex-col items-center w-full mt-3">
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="text-white underline mb-2 hover:text-blue-400"
-            >
-              Login
-            </button>
-            <button
-              type="submit"
-              className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-2 rounded-full transition"
-            >
-              Confirm
-            </button>
-          </div>
+          <button
+            disabled={loading}
+            type="submit"
+            className="bg-gray-700 hover:bg-gray-600 py-2 rounded-full font-semibold"
+          >
+            {loading ? "Processing..." : "Register"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="underline text-sm"
+          >
+            Login
+          </button>
         </form>
       </div>
     </main>
   );
 }
-

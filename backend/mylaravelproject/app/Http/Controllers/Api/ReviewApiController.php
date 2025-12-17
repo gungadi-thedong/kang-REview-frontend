@@ -24,33 +24,36 @@ class ReviewApiController extends Controller
         ]);
     }
 
-    // Return a single review
-    public function show($id)
-    {
-        $review = Review::findOrFail($id);
+   // Return a single review
+public function show($id)
+{
+    $review = Review::with('komentar')->findOrFail($id);
 
-        $review->gambar_1 = asset('storage/' . $review->gambar_1);
-        $review->gambar_2 = asset('storage/' . $review->gambar_2);
 
-        return response()->json([
-            'success' => true,
-            'data' => $review
-        ]);
-    }
+    $review->gambar_1 = asset('storage/' . $review->gambar_1);
+    $review->gambar_2 = asset('storage/' . $review->gambar_2);
 
-    // Optional: featured reviews
-    public function featured()
-    {
-        // Example: featured if rating >= 4
-        $featured = Review::where('rating', '>=', 4)->get()->map(function ($review) {
+    return response()->json([
+        'success' => true,
+        'data' => $review
+    ]);
+}
+
+// Optional: featured reviews
+public function featured()
+{
+    $featured = Review::where('rating', '>=', 4)
+        ->get()
+        ->map(function ($review) {
             $review->gambar_1 = asset('storage/' . $review->gambar_1);
             $review->gambar_2 = asset('storage/' . $review->gambar_2);
             return $review;
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $featured
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $featured
+    ]);
+}
+
 }

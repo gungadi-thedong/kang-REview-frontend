@@ -40,10 +40,12 @@ export default function ProductArticle({ reviewId }: { reviewId: string }) {
 
   return (
     <section className="bg-[#0b1623] text-white min-h-screen px-8 pt-28">
-      <button onClick={() => router.back()} className="mb-6 text-gray-300">
-        ← Kembali
+      <button
+        onClick={() => router.back()}
+        className="mb-6 text-gray-300 hover:text-white"
+      >
+        ← Back
       </button>
-
       <h1 className="text-3xl md:text-5xl font-bold mb-4">{review.judul}</h1>
 
       <p className="text-gray-300 mb-10">{review.paragraf_buka}</p>

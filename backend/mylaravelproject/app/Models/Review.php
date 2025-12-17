@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
+    public function komentar()
+{
+    return $this->hasMany(Komentar::class, 'id_review', 'id_review');
+}
+
     protected $table = 'review';        // singular table
     protected $primaryKey = 'id_review'; // non-standard PK
     public $timestamps = false;          // no created_at / updated_at

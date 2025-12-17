@@ -3,28 +3,68 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Username:", username, "Password:", password);
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // ✅ Save auth data
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("permission", data.permission);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // ✅ Redirect based on role
+      if (data.permission === "admin" || data.permission === "author") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen bg-[#0b1623] text-white flex flex-col items-center">
-      {/* 🔹 Navbar */}
+      {/* Navbar */}
       <nav className="w-full flex justify-between items-center px-10 py-6">
         <h1 className="text-2xl font-bold">Kang Review</h1>
-        <a href="/" className="text-lg hover:underline">
+        <Link href="/" className="text-lg hover:underline">
           Home
-        </a>
+        </Link>
       </nav>
 
-      {/* 🔹 Form Login */}
       <div className="flex flex-col justify-center items-center flex-grow">
         <h2 className="text-3xl font-[Cinzel] mb-8">Login</h2>
 
@@ -39,7 +79,7 @@ export default function LoginPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 rounded-full bg-[#2c2c2c] text-white border border-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-3 py-2 rounded-full bg-[#2c2c2c] text-white border border-white"
               required
             />
           </div>
@@ -51,34 +91,36 @@ export default function LoginPage() {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 pr-10 rounded-full bg-[#2c2c2c] text-white border border-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-3 py-2 pr-10 rounded-full bg-[#2c2c2c] text-white border border-white"
               required
             />
-            {/* 🔹 Tombol lihat/sembunyikan password */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-8 text-gray-400 hover:text-white transition"
-              tabIndex={-1}
+              className="absolute right-3 top-8 text-gray-400 hover:text-white"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
 
-          {/* 🔹 Tombol aksi */}
+          {/* Error */}
+          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+
+          {/* Actions */}
           <div className="flex flex-col items-center w-full mt-3">
             <Link
-              href="/register" // 🔹 arahkan ke halaman register
-              className="text-white underline mb-2 hover:text-blue-400 transition"
+              href="/register"
+              className="underline mb-2 hover:text-blue-400"
             >
               Register
             </Link>
 
             <button
               type="submit"
-              className="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-2 rounded-full transition"
+              disabled={loading}
+              className="bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded-full"
             >
-              Confirm
+              {loading ? "Logging in..." : "Confirm"}
             </button>
           </div>
         </form>
@@ -86,4 +128,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

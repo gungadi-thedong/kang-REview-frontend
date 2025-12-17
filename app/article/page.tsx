@@ -7,6 +7,7 @@ import SpecTable from "./subcomponent/SpecSection";
 import AboutSection from "../component/AboutSection";
 import Footer from "../component/Footer";
 import { useSearchParams } from "next/navigation";
+import ReviewCage from "./subcomponent/ReviewCage";
 
 export default function ProductArticle() {
   const searchParams = useSearchParams();
@@ -20,6 +21,7 @@ export default function ProductArticle() {
       <Navbar />
       {id && <ProductTitle reviewId={id} />}
       <ReviewSection />
+      <ReviewCage />
       <SpecTable category={category} /> {/* otomatis sesuai kategori */}
       <AboutSection />
       <Footer />
