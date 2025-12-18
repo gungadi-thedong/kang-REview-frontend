@@ -6,35 +6,55 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Login;
 use App\Models\User;
-
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+
+
+
 
 class AuthController extends Controller
 {
     public function register(Request $request)
 {
     $request->validate([
-        'nama_user' => 'required',
+        'nama_user' => 'required|string|max:100',
         'email' => 'required|email|unique:user,email',
-        'username' => 'required|unique:login,username',
-        'password' => 'required|min:6',
+        'username' => 'required|string|unique:login,username',
+        'password' => 'required|string|min:6',
     ]);
 
-    $user = User::create([
-        'nama_user' => $request->nama_user,
-        'email' => $request->email,
-    ]);
+    DB::beginTransaction();
 
-    Login::create([
-        'username' => $request->username,
-        'id_user' => $user->id_user,
-        'password' => Hash::make($request->password),
-        'permission' => 'user',
-    ]);
+    try {
+        // 1️⃣ Insert into user table
+        $idUser = DB::table('user')->insertGetId([
+            'nama_user' => $request->nama_user,
+            'email' => $request->email,
+        ]);
 
-    return response()->json([
-        'message' => 'Registered successfully',
-    ]);
+        // 2️⃣ Insert into login table
+        DB::table('login')->insert([
+            'username'   => $request->username,
+            'id_user'    => $idUser,
+            'password'   => Hash::make($request->password),
+            'permission' => 'user',
+        ]);
+
+        DB::commit();
+
+        return response()->json([
+            'message' => 'Registrasi berhasil',
+            'id_user' => $idUser, // optional
+        ], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'message' => 'Registrasi gagal',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 }
 
     public function login(Request $request)
